@@ -1,0 +1,104 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Category model
+model Category {
+  id          String     @id @default(cuid())
+  name        String
+  enabled     Boolean    @default(true)
+  menuItems   MenuItem[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+// MenuItem model
+model MenuItem {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  price         Decimal
+  image         String
+  category      Category  @relation(fields: [categoryId], references: [id])
+  categoryId    String
+  options       String[]  @default(["Regular"])
+  mealIncludes  String[]  @default(["Meal"])
+  popular       Boolean   @default(false)
+  available     Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  orderItems    OrderItem[]
+}
+
+// Order model
+model Order {
+  id                String      @id @default(cuid())
+  items             OrderItem[]
+  customer          Customer    @relation(fields: [customerId], references: [id])
+  customerId        String
+  status            String      @default("pending")
+  total             Decimal
+  deliveryFee       Decimal     @default(5.00)
+  specialInstructions String?
+  paymentMethod     String
+  estimatedDelivery String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+// OrderItem model - represents items in an order
+model OrderItem {
+  id              String    @id @default(cuid())
+  order           Order     @relation(fields: [orderId], references: [id])
+  orderId         String
+  menuItem        MenuItem  @relation(fields: [menuItemId], references: [id])
+  menuItemId      String
+  quantity        Int       @default(1)
+  selectedOption  String    @default("Regular")
+  price           Decimal
+  createdAt       DateTime  @default(now())
+}
+
+// Customer model
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  address   String?
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Admin model for authentication
+model Admin {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// MenuSettings model
+model MenuSettings {
+  id              String    @id @default(cuid())
+  currency        String    @default("USD")
+  deliveryFee     Decimal   @default(5.00)
+  serviceFee      Decimal   @default(10.00)
+  showPopular     Boolean   @default(true)
+  showDescriptions Boolean  @default(true)
+  enableWishlist  Boolean   @default(true)
+  showPrices      Boolean   @default(true)
+  enableRatings   Boolean   @default(true)
+  itemsPerRow     Int       @default(3)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
